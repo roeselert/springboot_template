@@ -5,6 +5,10 @@ import com.tngtech.archunit.junit.AnalyzeClasses;
 import com.tngtech.archunit.junit.ArchTest;
 import com.tngtech.archunit.lang.ArchRule;
 
+import static com.tngtech.archunit.core.domain.Formatters.joinSingleQuoted;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAnyPackage;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameContaining;
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.simpleNameEndingWith;
 import static com.tngtech.archunit.library.Architectures.layeredArchitecture;
 import static com.tngtech.archunit.library.dependencies.SlicesRuleDefinition.slices;
 
@@ -16,6 +20,7 @@ public class MyArchitectureTest {
             .matching("org.springframework.samples.petclinic.(*)..")
             .should().beFreeOfCycles();
 
+    /*
     @ArchTest
     public static final ArchRule myLayer = layeredArchitecture()
             .consideringAllDependencies()
@@ -27,6 +32,16 @@ public class MyArchitectureTest {
             .whereLayer("Service").mayOnlyBeAccessedByLayers("Controller")
             .whereLayer("Persistence").mayOnlyBeAccessedByLayers("Service");
 
+     */
 
+    @ArchTest
+    public static final ArchRule myLayer = layeredArchitecture()
+            .consideringAllDependencies()
+            .layer("Controller").definedBy(simpleNameEndingWith("Controller").or(simpleNameEndingWith("Formatter")))
+            .layer("Persistence").definedBy(simpleNameEndingWith("Repository"))
+            .layer("Test").definedBy(simpleNameContaining("Test"))
+
+            .whereLayer("Controller").mayOnlyBeAccessedByLayers("Test")
+            .whereLayer("Persistence").mayOnlyBeAccessedByLayers("Controller","Test");
 
 }
